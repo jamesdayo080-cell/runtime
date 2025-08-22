@@ -150,7 +150,7 @@ initDistroRid()
 
 showSubsetHelp()
 {
-  "$scriptroot/common/build.sh" "-restore" "-build" "/p:Subset=help" "/clp:nosummary" "/tl:false"
+  "$scriptroot/common/build.sh" "-restore" "-build" "/p:Subset=help" "/clp:nosummary" "/v:detailed"
 }
 
 arguments=()
@@ -569,8 +569,9 @@ if [[ "${TreatWarningsAsErrors:-}" == "false" ]]; then
     arguments+=("-warnAsError" "false")
 fi
 
-# disable terminal logger for now: https://github.com/dotnet/runtime/issues/97211
-arguments+=("-tl:false")
+# terminal logger does not show high importance messages, except when Detailed
+# https://github.com/dotnet/msbuild/pull/9810
+arguments+=("/v:detailed")
 
 initDistroRid "$os" "$arch" "$crossBuild"
 

@@ -138,7 +138,7 @@ if (-not $PSBoundParameters.ContainsKey("subset") -and $properties.Length -gt 0 
 }
 
 if ($subset -eq 'help') {
-  Invoke-Expression "& `"$PSScriptRoot/common/build.ps1`" -restore -build /p:subset=help /clp:nosummary /tl:false"
+  Invoke-Expression "& `"$PSScriptRoot/common/build.ps1`" -restore -build /p:subset=help /clp:nosummary /v:detailed"
   exit 0
 }
 
@@ -338,8 +338,9 @@ if ($env:TreatWarningsAsErrors -eq 'false') {
   $arguments += " -warnAsError `$false"
 }
 
-# disable terminal logger for now: https://github.com/dotnet/runtime/issues/97211
-$arguments += " /tl:false"
+# terminal logger does not show high importance messages, except when Detailed
+# https://github.com/dotnet/msbuild/pull/9810
+$arguments += " /v:detailed"
 
 # Disable targeting pack caching as we reference a partially constructed targeting pack and update it later.
 # The later changes are ignored when using the cache.
