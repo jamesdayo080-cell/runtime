@@ -222,9 +222,40 @@ async function loadNodeModules(config, modulesToLoad) {
     config.environmentVariables["IsWebSocketSupported"] = ("WebSocket" in globalThis).toString().toLowerCase();
 }
 
+// --- Test exit control ---
+// By default, tests will exit after completion (for CI automation).
+// To keep the browser open after tests (for debugging), set EXIT_AFTER_TESTS to false below.
+//
+// Example:
+//   const EXIT_AFTER_TESTS = false; // <-- Uncomment for debugging
+//   const EXIT_AFTER_TESTS = true;  // <-- Default for CI
+
+const EXIT_AFTER_TESTS = true; // Default: exit after tests (CI)
+// const EXIT_AFTER_TESTS = false; // Uncomment to keep browser open after tests (debugging)
+
 let mono_exit = (code, reason) => {
-    console.log(`test-main failed early ${code} ${reason} ${new Error().stack}`);
+    // If EXIT_AFTER_TESTS is false and running in browser UI, do not exit
+    if (!EXIT_AFTER_TESTS && ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_WORKER && !isHeadlessBrowser()) {
+        console.log(`Test completed (exit code: ${code}). Browser will remain open for debugging.`);
+        return;
+    }
+    // Otherwise, exit as normal
+    console.log(`test-main exiting ${code} ${reason ? reason : ''}`);
+    if (typeof exit === 'function') exit(code);
 };
+
+// Detect if running in headless browser mode
+function isHeadlessBrowser() {
+    if (!ENVIRONMENT_IS_WEB) return false;
+    // Chrome/Chromium headless detection
+    if (isChromium && navigator.userAgent.includes('HeadlessChrome')) return true;
+    // Firefox headless detection
+    if (isFirefox && navigator.userAgent.includes('Headless')) return true;
+    // Playwright/Puppeteer detection
+    if (navigator.webdriver) return true;
+    // Other headless detection heuristics can be added here
+    return false;
+}
 
 const App = {
     create_function(...args) {
@@ -290,6 +321,13 @@ function configureRuntime(dotnet, runArgs) {
         if (runArgs.interpreterPgo)
             dotnet.withInterpreterPgo(true);
         dotnet.withEnvironmentVariable("IsWebSocketSupported", "true");
+
+        // --- Browser UI/Headless handling ---
+        // If running in browser UI (not headless), disable console forwarding and prevent auto-exit
+        if (!isHeadlessBrowser() && !ENVIRONMENT_IS_WORKER) {
+            runArgs.forwardConsole = false; // Disable console forwarding for UI
+            // mono_exit will prevent exit if EXIT_AFTER_TESTS is false (see above)
+        }
     }
     if (runArgs.runtimeArgs.length > 0) {
         dotnet.withRuntimeOptions(runArgs.runtimeArgs);
