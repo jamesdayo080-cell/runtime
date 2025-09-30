@@ -15,9 +15,7 @@
     <!-- Propagate the configuration and platform to project references. When building in VS, this defaults to true.
          Explicitly setting it to false ensures projects are built in the corresponding configuration both in VS and on the command line. -->
     <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
-  </PropertyGroup>
-
-  <!-- We don't have RepoRoot or RepositoryEngineeringDir available at this point -->
+  </PropertyGro
   <Import Project="$(MSBuildThisFileDirectory)/eng/OSArch.props" />
 
   <PropertyGroup Label="SetOSTargetMinVersions">
@@ -370,4 +368,4 @@
     <BeforeMicrosoftNETSdkTargets Condition="'$(MSBuildProjectExtension)' == '.ilproj'">$(BeforeMicrosoftNETSdkTargets);$(RepositoryEngineeringDir)ILSdk.BeforeTargets.targets</BeforeMicrosoftNETSdkTargets>
   </PropertyGroup>
 
-</Project>
+<reset>
